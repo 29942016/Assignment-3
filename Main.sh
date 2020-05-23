@@ -1,15 +1,33 @@
 #!/bin/bash
 # grep -Pzo "(DSC\d{5})" ./file
 # https://www.ecu.edu.au/service-centres/MACSC/gallery/gallery.php?folder=152
+# https://secure.ecu.edu.au/service-centres/MACSC/gallery/152/DSC01601.jpg
+# DSC01607
+
+urlSpecificImage="https://secure.ecu.edu.au/service-centres/MACSC/gallery/152/"
+urlImages="https://www.ecu.edu.au/service-centres/MACSC/gallery/gallery.php?folder=152"
+images=$(wget -q $urlImages -O /dev/stdout | grep -Po "(DSC\d{5})" | sort --unique)
+
+function getImageSize {
+    url="${urlSpecificImage}/${id}.jpg"
+    result=$(curl -sI $url | grep -i "Content-Length" | grep -Po "(\d)+")
+    formatted=$(expr $result / 1024)
+    echo "${formatted}kb"
+}
 
 function GetSpecific {
-    url="https://www.ecu.edu.au/service-centres/MACSC/gallery/gallery.php?folder=152"
     echo "GetSpecific()"
 
-    data=$(wget -q $url -O /dev/stdout | grep -Po "(DSC\d{5})" | sort --unique)
-    echo ${data[@]}
+    read -p "Enter image url: " id
 
-    #read -p "Enter image url: " id
+    if [[ " ${images[@]} " =~ "${id}" ]];
+    then
+        echo "[OK] ${id}"
+        imageSize=$(getImageSize ${id})
+        echo "Downloading ${id} with the file name ${id}.jpg, with a file size of ${imageSize}..."
+    else 
+        echo "[ERR] Couldn't find the specified '${id}'."
+    fi
 }
 
 function GetAll {
